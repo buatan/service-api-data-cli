@@ -305,9 +305,8 @@ func main() {
 					&cli.StringFlag{Name: "message", Aliases: []string{"m"}},
 				},
 				Action: func(context *cli.Context) error {
-					name := context.Args().Get(0)
 					message := fmt.Sprintf("%v", context.Value("message"))
-					fmt.Printf("Creating task: %s\n", name)
+					fmt.Printf("Commiting: %q\n", message)
 					commands := []string{
 						"add -A",
 						"commit -m %q",
