@@ -139,7 +139,11 @@ func execGit(command, path, message string) error {
 }
 
 func execGitFormatting(command, path, message, override string) error {
-	fmt.Println(message)
+	if strings.Contains(message, "%") {
+		fmt.Println(fmt.Sprintf(message, override))
+	} else {
+		fmt.Println(message)
+	}
 	var args []string
 	for _, s := range strings.Split(command, " ") {
 		if strings.Contains(s, "%") {
