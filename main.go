@@ -35,7 +35,7 @@ mytens new bugfix TBI-1234
 	git checkout -b bugfix/TBI-1234
 */
 /*
-mytens finish bugfix TBI-1234
+mytens push bugfix TBI-1234
 	git checkout task/TBI-1234
 	git merge bugfix/TBI-1234
 	git push origin task/TBI-1234
@@ -139,7 +139,10 @@ func execGit(command, path, message string) error {
 }
 
 func execGitFormatting(command, path, message, override string) error {
-	if strings.Contains(message, "%") {
+	if strings.Contains(command, "#") {
+		fmt.Println(message)
+		return execCmd(command, path)
+	} else if strings.Contains(message, "%") {
 		fmt.Println(fmt.Sprintf(message, override))
 	} else {
 		fmt.Println(message)
@@ -157,6 +160,19 @@ func execGitFormatting(command, path, message, override string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
+}
+
+func execCmd(command, path string) error {
+	command = strings.Replace(command, "#", "", 1)
+	args := strings.Split(command, " ")
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Path = path
+	return cmd.Run()
+}
+
+func genMRUrl(branch string) string {
+	repoUrl := "https://gitlab.playcourt.id/haqiramadhani/service-api-data"
+	return fmt.Sprintf("%s/-/merge_requests/new?merge_request[source_branch]=%s&merge_request[target_branch]=%s", repoUrl, branch, branch)
 }
 
 func main() {
@@ -264,6 +280,7 @@ func main() {
 									return err
 								}
 							}
+							fmt.Println(genMRUrl("release"))
 							return nil
 						},
 					},
@@ -275,18 +292,98 @@ func main() {
 					{
 						Name:     "task",
 						Category: "task",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"checkout task/" + name,
+								"push origin task/" + name,
+								"checkout develop",
+								"pull upstream develop",
+								"merge task/" + name,
+								"push origin develop",
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("develop"))
+							return nil
+						},
 					},
 					{
 						Name:     "bugfix",
 						Category: "bugfix",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"checkout task/" + name,
+								"merge bugfix/" + name,
+								"push origin task/" + name,
+								"checkout develop",
+								"pull upstream develop",
+								"merge task/" + name,
+								"push origin develop",
+								"branch -D bugfix/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("develop"))
+							return nil
+						},
 					},
 					{
 						Name:     "hotfix",
 						Category: "hotfix",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"checkout release",
+								"pull upstream release",
+								"merge hotfix/" + name,
+								"push origin release",
+								"checkout hotfix/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("release"))
+							return nil
+						},
 					},
 					{
 						Name:     "release",
 						Category: "release",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"checkout release",
+								"pull upstream release",
+								"merge release/" + name,
+								"push origin release",
+								"checkout release/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("release"))
+							return nil
+						},
 					},
 				},
 			},
@@ -296,10 +393,72 @@ func main() {
 					{
 						Name:     "hotfix",
 						Category: "hotfix",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							message := "Update changelog " + name
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"#npm i -g auto-changelog",
+								"checkout release/" + name,
+								"tag " + name,
+								"#auto-changelog",
+								"add -A",
+								"commit -m %q",
+								"tag -d " + name,
+								"tag " + name,
+								"checkout master",
+								"pull upstream master",
+								"merge " + name,
+								"push origin " + name,
+								"push upstream " + name,
+								"push origin master",
+								"branch -D hotfix/" + name,
+								"checkout develop",
+							}
+							for _, s := range commands {
+								err := execGitFormatting(s, path, "git "+s, message)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("master"))
+							return nil
+						},
 					},
 					{
 						Name:     "release",
 						Category: "release",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							message := "Update changelog " + name
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"#npm i -g auto-changelog",
+								"checkout release/" + name,
+								"tag " + name,
+								"#auto-changelog",
+								"add .",
+								"commit -m %q",
+								"tag -d " + name,
+								"tah " + name,
+								"checkout master",
+								"pull upstream master",
+								"merge " + name,
+								"push origin " + name,
+								"push upstream " + name,
+								"push origin master",
+								"branch -D hotfix/" + name,
+								"checkout develop",
+							}
+							for _, s := range commands {
+								err := execGitFormatting(s, path, "git "+s, message)
+								if err != nil {
+									return err
+								}
+							}
+							fmt.Println(genMRUrl("master"))
+							return nil
+						},
 					},
 				},
 			},
