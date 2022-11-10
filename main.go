@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 /*
@@ -128,6 +129,32 @@ mytens finish release v1.1.0
 	https://gitlab.playcourt.id/haqiramadhani/service-api-data/-/merge_requests/new?merge_request%5Bsource_branch%5D=master&merge_request%5Btarget_branch%5D=master
 */
 
+func execGit(command, path, message string) error {
+	fmt.Println(message)
+	cmd := exec.Command("git", strings.Split(command, " ")...)
+	cmd.Dir = path
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
+}
+
+func execGitFormatting(command, path, message, override string) error {
+	fmt.Println(message)
+	var args []string
+	for _, s := range strings.Split(command, " ") {
+		if strings.Contains(s, "%") {
+			args = append(args, fmt.Sprintf(s, override))
+		} else {
+			args = append(args, s)
+		}
+	}
+	cmd := exec.Command("git", args...)
+	cmd.Dir = path
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
+}
+
 func main() {
 	path, err := os.Getwd()
 	if err != nil {
@@ -144,25 +171,97 @@ func main() {
 						Name:     "task",
 						Category: "task",
 						Action: func(context *cli.Context) error {
-							fmt.Printf("Creating task: %s\n", context.Args().Get(0))
-							cmd := exec.Command("git", "add", ".")
-							cmd.Dir = path
-							out, err := cmd.Output()
-							fmt.Printf(string(out))
-							return err
+							name := context.Args().Get(0)
+							fmt.Printf("Creating task: %s\n", name)
+							commands := []string{
+								"checkout develop",
+								"checkout -b task/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							return nil
 						},
 					},
 					{
 						Name:     "bugfix",
 						Category: "bugfix",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing bugfix: %s\n", name)
+							commands := []string{
+								"checkout develop",
+								"checkout -b bugfix/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							return nil
+						},
 					},
 					{
 						Name:     "hotfix",
 						Category: "hotfix",
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							fmt.Printf("Preparing hotfix: %s\n", name)
+							commands := []string{
+								"checkout develop",
+								"checkout -b hotfix/" + name,
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							return nil
+						},
 					},
 					{
 						Name:     "release",
 						Category: "release",
+						Flags: []cli.Flag{
+							&cli.StringFlag{Name: "branches", Aliases: []string{"b"}},
+						},
+						Action: func(context *cli.Context) error {
+							name := context.Args().Get(0)
+							branchesValue := context.Value("branches")
+							if branchesValue == "" {
+								branchesValue = "develop"
+							}
+							branches := strings.Split(fmt.Sprintf("%v", branchesValue), ",")
+							fmt.Printf("Publishing %v to release: %s\n", branches, name)
+							commands := []string{
+								"checkout master",
+								"pull upstream master",
+								"checkout -b release/" + name,
+							}
+							for _, branch := range branches {
+								commands = append(commands, "merge "+branch)
+							}
+							commands = append(commands, "checkout release")
+							commands = append(commands, "pull upstream release")
+							commands = append(commands, "merge release/"+name)
+							commands = append(commands, "push origin release")
+							commands = append(commands, "checkout release/"+name)
+							for _, branch := range branches {
+								commands = append(commands, "branch -D "+branch)
+							}
+							for _, s := range commands {
+								err := execGit(s, path, "git "+s)
+								if err != nil {
+									return err
+								}
+							}
+							return nil
+						},
 					},
 				},
 			},
@@ -204,6 +303,22 @@ func main() {
 				Name: "commit",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "message", Aliases: []string{"m"}},
+				},
+				Action: func(context *cli.Context) error {
+					name := context.Args().Get(0)
+					message := fmt.Sprintf("%v", context.Value("message"))
+					fmt.Printf("Creating task: %s\n", name)
+					commands := []string{
+						"add -A",
+						"commit -m %q",
+					}
+					for _, s := range commands {
+						err := execGitFormatting(s, path, "git "+s, message)
+						if err != nil {
+							return err
+						}
+					}
+					return nil
 				},
 			},
 		},
