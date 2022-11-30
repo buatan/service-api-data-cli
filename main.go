@@ -191,7 +191,7 @@ func main() {
 	}
 	app := &cli.App{
 		Name:        "mytens",
-		Version:     "0.1.0",
+		Version:     "0.1.6",
 		Usage:       "Simple command to implement git flow and other command when developing MyTEnS, especially service-api-data",
 		UsageText:   "mytens new task TBI-1234\nmytens commit TBI-1234 -m \"[Module] Commit message\"\nmytens push task TBI-1234\nmytens new bugfix TBI-1234\nmytens push bugfix TBI-1234\nmytens new hotfix v1.0.1\nmytens push hotfix v1.0.1\nmytens finish hotfix v1.0.1\nmytens new release v1.1.0 -b TBI-1234,TBI-1235,TBI-1236\nmytens push release v1.1.0\nmytens finish release v1.1.0",
 		Description: fmt.Sprintf("You can use %s (without -b flag) for release from branch develop", color.Colorize(color.Blue, "mytens new release v1.1.0")),
