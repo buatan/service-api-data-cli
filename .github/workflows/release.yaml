@@ -36,5 +36,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "https://dl.google.com/go/go1.19.linux-amd64.tar.gz"
           binary_name: "mytens"
-          compress_assets: OFF
           release_tag: ${{  github.ref_name }}
