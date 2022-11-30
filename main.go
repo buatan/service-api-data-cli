@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/TwiN/go-color"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -15,7 +16,7 @@ mytens new task TBI-1234
 	git checkout -b task/TBI-1234
 */
 /*
-mytens commit TBI-1234 -m ""
+mytens commit TBI-1234 -m "[Module] Commit message"
 	git add .
 	git commit -m "$(m) #TBI-1234"
 */
@@ -175,23 +176,40 @@ func genMRUrl(branch string) string {
 	return fmt.Sprintf("%s/-/merge_requests/new?merge_request[source_branch]=%s&merge_request[target_branch]=%s", repoUrl, branch, branch)
 }
 
+func requiredParam(param, message string) bool {
+	if param == "" {
+		log.Println(color.Colorize(color.Red, message))
+		return true
+	}
+	return false
+}
+
 func main() {
 	path, err := os.Getwd()
 	if err != nil {
 		log.Fatalln(err)
 	}
 	app := &cli.App{
-		Name:  "mytens",
-		Usage: "Simple command to implement git flow and other command when developing MyTEnS, especially service-api-data",
+		Name:        "mytens",
+		Usage:       "Simple command to implement git flow and other command when developing MyTEnS, especially service-api-data",
+		UsageText:   "mytens new task TBI-1234\nmytens commit TBI-1234 -m \"[Module] Commit message\"\nmytens push task TBI-1234\nmytens new bugfix TBI-1234\nmytens push bugfix TBI-1234\nmytens new hotfix v1.0.1\nmytens push hotfix v1.0.1\nmytens finish hotfix v1.0.1\nmytens new release v1.1.0 -b TBI-1234,TBI-1235,TBI-1236\nmytens push release v1.1.0\nmytens finish release v1.1.0",
+		Description: fmt.Sprintf("You can use %s (without -b flag) for release from branch develop", color.Colorize(color.Blue, "mytens new release v1.1.0")),
 		Commands: []*cli.Command{
 			{
-				Name: "new",
+				Name:    "new",
+				Aliases: []string{"g", "n"},
+				Usage:   "Starting new action",
 				Subcommands: []*cli.Command{
 					{
-						Name:     "task",
-						Category: "task",
+						Name:        "task",
+						Usage:       "Creating new task",
+						Description: "- TBI-1234 is a task name, you can use backlog code.\n\nAction:\n\tgit checkout develop\n\tgit checkout -b task/TBI-1234",
+						UsageText:   "mytens new task TBI-1234",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
+							if requiredParam(name, "Task name is required") {
+								return nil
+							}
 							fmt.Printf("Creating task: %s\n", name)
 							commands := []string{
 								"checkout develop",
@@ -207,8 +225,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "bugfix",
-						Category: "bugfix",
+						Name:        "bugfix",
+						Description: "",
+						Category:    "bugfix",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing bugfix: %s\n", name)
@@ -226,8 +245,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "hotfix",
-						Category: "hotfix",
+						Name:        "hotfix",
+						Description: "",
+						Category:    "hotfix",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing hotfix: %s\n", name)
@@ -245,8 +265,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "release",
-						Category: "release",
+						Name:        "release",
+						Description: "",
+						Category:    "release",
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "branches", Aliases: []string{"b"}},
 						},
@@ -287,11 +308,14 @@ func main() {
 				},
 			},
 			{
-				Name: "push",
+				Name:    "push",
+				Aliases: []string{"p"},
+				Usage:   "Publish to remote branch",
 				Subcommands: []*cli.Command{
 					{
-						Name:     "task",
-						Category: "task",
+						Name:        "task",
+						Description: "",
+						Category:    "task",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing hotfix: %s\n", name)
@@ -314,8 +338,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "bugfix",
-						Category: "bugfix",
+						Name:        "bugfix",
+						Description: "",
+						Category:    "bugfix",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing hotfix: %s\n", name)
@@ -340,8 +365,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "hotfix",
-						Category: "hotfix",
+						Name:        "hotfix",
+						Description: "",
+						Category:    "hotfix",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing hotfix: %s\n", name)
@@ -363,8 +389,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "release",
-						Category: "release",
+						Name:        "release",
+						Description: "",
+						Category:    "release",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							fmt.Printf("Preparing hotfix: %s\n", name)
@@ -388,11 +415,14 @@ func main() {
 				},
 			},
 			{
-				Name: "finish",
+				Name:    "finish",
+				Aliases: []string{"f"},
+				Usage:   "Start build for production",
 				Subcommands: []*cli.Command{
 					{
-						Name:     "hotfix",
-						Category: "hotfix",
+						Name:        "hotfix",
+						Description: "",
+						Category:    "hotfix",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							message := "Update changelog " + name
@@ -426,8 +456,9 @@ func main() {
 						},
 					},
 					{
-						Name:     "release",
-						Category: "release",
+						Name:        "release",
+						Description: "",
+						Category:    "release",
 						Action: func(context *cli.Context) error {
 							name := context.Args().Get(0)
 							message := "Update changelog " + name
@@ -463,7 +494,9 @@ func main() {
 				},
 			},
 			{
-				Name: "commit",
+				Name:    "commit",
+				Aliases: []string{"c"},
+				Usage:   "Commit changes",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "message", Aliases: []string{"m"}},
 				},

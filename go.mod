@@ -2,7 +2,10 @@ module service-api-data-cli
 
 go 1.19
 
-require github.com/urfave/cli/v2 v2.23.5
+require (
+	github.com/TwiN/go-color v1.4.0
+	github.com/urfave/cli/v2 v2.23.5
+)
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
