@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/TwiN/go-color"
 	"github.com/urfave/cli/v2"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -130,6 +132,24 @@ mytens finish release v1.1.0
 	https://gitlab.playcourt.id/haqiramadhani/service-api-data/-/merge_requests/new?merge_request%5Bsource_branch%5D=master&merge_request%5Btarget_branch%5D=master
 */
 
+type Config struct {
+	Version     string `json:"version"`
+	Description string `json:"description"`
+	Homepage    string `json:"homepage"`
+}
+
+func getConfig(filename string) (Config, error) {
+	var payload Config
+
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return payload, err
+	}
+
+	err = json.Unmarshal(content, &payload)
+	return payload, err
+}
+
 func execGit(command, path, message string) error {
 	fmt.Println(message)
 	cmd := exec.Command("git", strings.Split(command, " ")...)
@@ -189,10 +209,14 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	config, err := getConfig("./bucket/mytens.json")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	app := &cli.App{
 		Name:        "mytens",
-		Version:     "0.1.6",
-		Usage:       "Simple command to implement git flow and other command when developing MyTEnS, especially service-api-data",
+		Version:     config.Version,
+		Usage:       config.Description,
 		UsageText:   "mytens new task TBI-1234\nmytens commit TBI-1234 -m \"[Module] Commit message\"\nmytens push task TBI-1234\nmytens new bugfix TBI-1234\nmytens push bugfix TBI-1234\nmytens new hotfix v1.0.1\nmytens push hotfix v1.0.1\nmytens finish hotfix v1.0.1\nmytens new release v1.1.0 -b TBI-1234,TBI-1235,TBI-1236\nmytens push release v1.1.0\nmytens finish release v1.1.0",
 		Description: fmt.Sprintf("You can use %s (without -b flag) for release from branch develop", color.Colorize(color.Blue, "mytens new release v1.1.0")),
 		Commands: []*cli.Command{
