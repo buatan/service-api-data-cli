@@ -1,0 +1,2 @@
+GET https://github.com/buatan/service-api-data-cli/releases/latest
+Accept: application/json

@@ -37,3 +37,4 @@ jobs:
           goversion: "https://dl.google.com/go/go1.19.linux-amd64.tar.gz"
           binary_name: "mytens"
           release_tag: ${{  github.ref_name }}
+          md5sum: FALSE
