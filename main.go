@@ -138,6 +138,7 @@ type Config struct {
 	Homepage    string `json:"homepage"`
 }
 
+//goland:noinspection GoDeprecation
 func getConfig(filename string) (Config, error) {
 	var payload Config
 
@@ -213,7 +214,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	config, err := getConfig(exe + "/bucket/mytens.json")
+	config, err := getConfig(strings.Replace(exe, "mytens.exe", "", 1) + "bucket/mytens.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
