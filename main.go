@@ -209,7 +209,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	config, err := getConfig("./bucket/mytens.json")
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	config, err := getConfig(exe + "/bucket/mytens.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
