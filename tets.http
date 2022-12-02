@@ -1,2 +1,7 @@
+### Get release version
 GET https://github.com/buatan/service-api-data-cli/releases/latest
+Accept: application/json
+
+### Get repo desc
+GET https://api.github.com/repos/buatan/service-api-data-cli
 Accept: application/json

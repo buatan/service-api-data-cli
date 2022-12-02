@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/TwiN/go-color"
 	"github.com/urfave/cli/v2"
+	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -138,22 +138,15 @@ type Config struct {
 	Homepage    string `json:"homepage"`
 }
 
-func getConfig() (Config, error) {
+func getConfig(filename string) (Config, error) {
 	var payload Config
-	client := &http.Client{}
 
-	request, err := http.NewRequest(http.MethodGet, "https://github.com/buatan/service-api-data-cli/releases/latest", nil)
+	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return Config{}, err
+		return payload, err
 	}
-	request.Header.Set("Accept", "application/json")
-	response, err := client.Do(request)
-	if err != nil {
-		return Config{}, err
-	}
-	defer response.Body.Close()
 
-	err = json.NewDecoder(response.Body).Decode(&payload)
+	err = json.Unmarshal(content, &payload)
 	return payload, err
 }
 
@@ -216,7 +209,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	config, err := getConfig()
+	config, err := getConfig("./bucket/mytens.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
