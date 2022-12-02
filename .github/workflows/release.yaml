@@ -38,4 +38,4 @@ jobs:
           binary_name: "mytens"
           release_tag: ${{ github.ref_name }}
           md5sum: FALSE
-          extra_files: bucket/mytens.json
+          extra_files: bucket
